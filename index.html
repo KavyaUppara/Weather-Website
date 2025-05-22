@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-b from-blue-900 to-gray-900 text-white font-sans p-6">
+  <div class="max-w-6xl mx-auto grid grid-cols-4 gap-4">
+
+    <!-- Search -->
+    <div class="col-span-4 mb-4 flex gap-2">
+      <input id="searchInput" type="text" placeholder="Search City (e.g., Delhi, IN)" 
+             class="w-full px-4 py-2 rounded-full text-black"
+             onkeydown="if(event.key==='Enter') fetchWeather()" />
+      <button onclick="fetchWeather()" class="bg-white text-black px-4 rounded-full">Search</button>
+    </div>
+
+    <!-- Weather Info -->
+    <div class="bg-white/10 p-4 rounded-xl col-span-1">
+      <h2 id="cityName" class="text-xl font-semibold">City Name</h2>
+      <p id="temperature" class="text-4xl">--°C</p>
+      <p id="description">--</p>
+      <p class="mt-4" id="date">--</p>
+      <p id="time">--</p>
+    </div>
+
+    <!-- Pressure Cards -->
+    <div class="grid grid-cols-4 gap-2 col-span-3">
+      <div id="pressure1" class="bg-white/10 p-4 rounded-xl text-center">Pressure<br/>--</div>
+      <div id="pressure2" class="bg-white/10 p-4 rounded-xl text-center">Pressure<br/>--</div>
+      <div id="pressure3" class="bg-white/10 p-4 rounded-xl text-center">Pressure<br/>--</div>
+      <div id="pressure4" class="bg-white/10 p-4 rounded-xl text-center">Pressure<br/>--</div>
+    </div>
+
+    <!-- AQI (Static) -->
+    <div class="bg-white/10 p-4 rounded-xl col-span-2">
+      <h3 class="text-lg font-semibold">Air Quality Index (AQI)</h3>
+      <div class="grid grid-cols-4 text-center mt-2">
+        <div>PM2.5<br/>3.90</div>
+        <div>SO2<br/>3.90</div>
+        <div>NO2<br/>3.90</div>
+        <div>O3<br/>3.90</div>
+      </div>
+    </div>
+
+    <!-- Sunrise Sunset -->
+    <div class="bg-white/10 p-4 rounded-xl col-span-2">
+      <h3 class="text-lg font-semibold">Sunrise & Sunset</h3>
+      <div class="flex justify-between mt-2">
+        <div>🌞<br/>Sunrise<br/><span id="sunrise">--</span></div>
+        <div>🌙<br/>Sunset<br/><span id="sunset">--</span></div>
+      </div>
+    </div>
+
+    <!-- Coming Days -->
+    <div class="bg-white/10 p-4 rounded-xl col-span-1">
+      <h3 class="text-lg font-semibold mb-2">Coming 5 Days</h3>
+      <ul class="space-y-1">
+        <li>🌧️ 7°C - 23-05-2025</li>
+        <li>🌧️ 7°C - 23-05-2025</li>
+        <li>🌧️ 7°C - 23-05-2025</li>
+        <li>🌧️ 7°C - 23-05-2025</li>
+        <li>🌧️ 7°C - 23-05-2025</li>
+      </ul>
+    </div>
+
+    <!-- Hourly -->
+    <div class="bg-white/10 p-4 rounded-xl col-span-3">
+      <h3 class="text-lg font-semibold mb-2">Today</h3>
+      <div class="grid grid-cols-6 gap-2 text-center">
+        <div>9 AM<br/>🌥️<br/>5°C</div>
+        <div>12 PM<br/>🌤️<br/>25°C</div>
+        <div>3 PM<br/>☀️<br/>35°C</div>
+        <div>6 PM<br/>🌥️<br/>5°C</div>
+        <div>9 PM<br/>🌥️<br/>5°C</div>
+        <div>12 AM<br/>🌥️<br/>5°C</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    async function fetchWeather() {
+      const city = document.getElementById('searchInput').value.trim();
+      const apiKey = 'b6d2eb440d5449b4f56e79fbc7538da7'; // Replace with your OpenWeatherMap API key
+
+      if (!city) {
+        alert("Please enter a city name.");
+        return;
+      }
+
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("City not found");
+
+        const data = await res.json();
+
+        document.getElementById('cityName').textContent = `${data.name}, ${data.sys.country}`;
+        document.getElementById('temperature').textContent = `${data.main.temp}°C`;
+        document.getElementById('description').textContent = data.weather[0].description;
+
+        const now = new Date();
+        document.getElementById('date').textContent = now.toLocaleDateString();
+        document.getElementById('time').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const pressure = `${data.main.pressure} hPa`;
+        ['pressure1', 'pressure2', 'pressure3', 'pressure4'].forEach(id => {
+          document.getElementById(id).innerHTML = `Pressure<br/>${pressure}`;
+        });
+
+        const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        document.getElementById('sunrise').textContent = sunrise;
+        document.getElementById('sunset').textContent = sunset;
+
+      } catch (err) {
+        document.getElementById('cityName').textContent = "City not found.";
+        document.getElementById('temperature').textContent = "--°C";
+        document.getElementById('description').textContent = "--";
+        document.getElementById('date').textContent = "--";
+        document.getElementById('time').textContent = "--";
+        document.getElementById('sunrise').textContent = "--";
+        document.getElementById('sunset').textContent = "--";
+        ['pressure1', 'pressure2', 'pressure3', 'pressure4'].forEach(id => {
+          document.getElementById(id).innerHTML = "Pressure<br/>--";
+        });
+      }
+    }
+  </script>
+</body>
+</html>
